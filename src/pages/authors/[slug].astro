@@ -1,0 +1,126 @@
+---
+import { contentfulClient } from "../../lib/contentful";
+import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
+import { richTextOptions } from "../../lib/richTextOptions";
+import Layout from "../../layouts/Layout.astro";
+import type { Author } from "../../lib/contentful";
+
+
+
+interface Props {
+  name: string;
+  slug: string;
+  bio: string;
+  authorPortrait: AuthorPortrait;
+}
+
+type AuthorPortrait = {
+  fields?: {
+    file?: {
+      url?: string;
+    };
+  };
+};
+
+export async function getStaticPaths() {
+  const entries = await contentfulClient.getEntries<Author>({
+    content_type: "author",
+  });
+
+  const pages = entries.items.map((item) => ({
+    params: { slug: item.fields.slug },
+    props: {
+      name: item.fields.name,
+      bio: item.fields.bio,
+      slug: item.fields.slug,
+      authorPortrait: item.fields.authorPortrait as AuthorPortrait | undefined,
+    },
+  }));
+  return pages;
+}
+
+const { name, slug, bio, authorPortrait } =
+  Astro.props;
+---
+
+<Layout pageTitle={name}>
+  <div>
+    <article>
+      <header>
+        <div class="article-banner">
+          {
+            authorPortrait?.fields?.file?.url && (
+              <img src={authorPortrait.fields.file.url} alt={name} />
+            )
+          }
+        </div>
+        <h1>Author: <strong>{name}</strong></h1>
+      </header>
+      <div class="content" set:html={bio} />
+    </article>
+  </div>
+
+  <style>
+    article {
+      header {
+        display: grid;
+        grid-template-columns: 38% 1fr;
+        background: #fff;
+        .article-banner {
+          width: 100%;
+          overflow: hidden;
+          position: relative;
+          img {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            object-fit: cover;
+          }
+        }
+        h1 {
+          font-size: 2rem;
+          background: var(--color-text);
+          color: var(--color-highlight);
+          margin: 0;
+          padding: 1rem;
+          text-transform: uppercase;
+          strong {
+            color: #FFF;
+            font-size: 3rem;
+            display: block;
+          }
+        }
+        h2 {
+          margin: 0;
+          background: var(--color-text);
+          color: #fff;
+          padding: 1rem;
+          font-weight: 400;
+          font-size: 1.3rem;
+        }
+        p.byline {
+          padding: 1rem;
+          margin: 0;
+          line-height: 120%;
+          text-transform: uppercase;
+          font-size: 1.5rem;
+        }
+        @media screen and (max-width: 1200px) {
+          display: block;
+          .article-banner {
+            aspect-ratio: 16/9;
+          }
+        }
+      }
+      .content {
+        font-size: 1.2rem;
+        padding: 1rem;
+        p {
+          line-height: 1.5rem;
+        }
+      }
+    }
+  </style>
+</Layout>
