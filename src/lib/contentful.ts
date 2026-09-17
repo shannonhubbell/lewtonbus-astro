@@ -14,6 +14,17 @@ export interface Article {
   }
 }
 
+export interface Author {
+  contentTypeId: "author",
+  fields: {
+    name: EntryFieldTypes.Text,
+    bio: EntryFieldTypes.Text,
+    slug: EntryFieldTypes.Text,
+    authorPortrait: EntryFieldTypes.Object,
+    blueskyUrl: EntryFieldTypes.Text
+  }
+}
+
 export const contentfulClient = contentful.createClient({
   space: import.meta.env.CONTENTFUL_SPACE_ID,
   accessToken: import.meta.env.DEV
